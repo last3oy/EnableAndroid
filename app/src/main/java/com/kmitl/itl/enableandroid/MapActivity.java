@@ -122,6 +122,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
             if (resultCode == RESULT_OK) {
                 Place place = PlaceAutocomplete.getPlace(this, data);
                 // TODO: move map to this place
+                mBinding.tvPlaceName.setText(place.getName());
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                 Status status = PlaceAutocomplete.getStatus(this, data);
                 // TODO: Handle the error.

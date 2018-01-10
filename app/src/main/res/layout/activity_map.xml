@@ -26,6 +26,7 @@
             app:cardElevation="4dp">
 
             <TextView
+                android:id="@+id/tvPlaceName"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="16dp"

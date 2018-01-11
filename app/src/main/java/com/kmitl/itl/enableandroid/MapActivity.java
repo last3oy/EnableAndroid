@@ -18,13 +18,21 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.kmitl.itl.enableandroid.databinding.ActivityMapBinding;
+import com.kmitl.itl.enableandroid.model.PlaceSearchResponse;
+import com.kmitl.itl.enableandroid.model.PlaceSearchResponse.PlaceResult;
+
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnMapReadyCallback {
 
@@ -32,6 +40,8 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
     private static int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
     private boolean mLocationPermissionGranted;
     private GoogleMap mMap;
+
+    String apiKey = "AIzaSyDvP8SXRLQVhmujhnn-ecqrWdUFkC0QBhk";
 
     @Override
     protected int getLayoutId() {
@@ -50,6 +60,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
                 //TODO: move camera here.
             }
         });
+//        -33.8670522,151.1957362&radius=500
     }
 
     private void informPlaceSearch() {
@@ -105,8 +116,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
         mLocationPermissionGranted = false;
         switch (requestCode) {
             case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     mLocationPermissionGranted = true;
                 }
             }
@@ -122,6 +132,32 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
             if (resultCode == RESULT_OK) {
                 Place place = PlaceAutocomplete.getPlace(this, data);
                 // TODO: move map to this place
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
+                String location = place.getLatLng().latitude + "," + place.getLatLng().longitude;
+                long radius = 5000;
+                Log.i("place", "location:" + location);
+                HttpManager.getInstance().getService()
+                        .searchBusStation(apiKey, location, radius)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Consumer<PlaceSearchResponse>() {
+                            @Override
+                            public void accept(PlaceSearchResponse placeSearchResponse) throws Exception {
+                                Toast.makeText(MapActivity.this, "" + placeSearchResponse.getPlaceResult().size(), Toast.LENGTH_SHORT).show();
+                                for (PlaceResult place :
+                                        placeSearchResponse.getPlaceResult()) {
+                                    Marker marker = mMap.addMarker(new MarkerOptions().position(place.getGeometry().getLatLng())
+                                            .title(place.getName()));
+                                    marker.setTag(place);
+                                    Log.i("place", place.getId() + " : " + place.getName());
+                                }
+                            }
+                        }, new Consumer<Throwable>() {
+                            @Override
+                            public void accept(Throwable throwable) throws Exception {
+                                Toast.makeText(MapActivity.this, "error", Toast.LENGTH_SHORT).show();
+                            }
+                        });
                 mBinding.tvPlaceName.setText(place.getName());
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                 Status status = PlaceAutocomplete.getStatus(this, data);
@@ -136,7 +172,17 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
+        mMap.setMinZoomPreference(7);
+        mMap.setMaxZoomPreference(20);
+//        3.7369667,100.5374572
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(13.7369667,100.5374572), 15));
+        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                PlaceResult placeResult = (PlaceResult) marker.getTag();
+                Toast.makeText(MapActivity.this, "" + placeResult.getId(), Toast.LENGTH_SHORT).show();
+            }
+        });
         updateMap();
     }
 

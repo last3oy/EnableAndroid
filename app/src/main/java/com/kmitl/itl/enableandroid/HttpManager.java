@@ -1,5 +1,7 @@
 package com.kmitl.itl.enableandroid;
 
+import com.google.android.gms.common.api.Api;
+
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
@@ -16,13 +18,18 @@ public class HttpManager {
 
     private ApiService mService;
 
+    public ApiService getService() {
+        return mService;
+    }
+
     private HttpManager() {
         //TODO: add base url
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("")
+                .baseUrl("https://www.google.com/")
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(SimpleXmlConverterFactory.create())
                 .build();
 
+        mService = retrofit.create(ApiService.class);
     }
 }

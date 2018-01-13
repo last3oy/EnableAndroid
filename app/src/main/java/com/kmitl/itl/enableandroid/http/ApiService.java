@@ -1,4 +1,4 @@
-package com.kmitl.itl.enableandroid;
+package com.kmitl.itl.enableandroid.http;
 
 import com.kmitl.itl.enableandroid.model.PlaceSearchResponse;
 
@@ -10,7 +10,6 @@ public interface ApiService {
 
     //TODO:
     @GET("https://maps.googleapis.com/maps/api/place/nearbysearch/xml?type=bus_station")
-    Observable<PlaceSearchResponse> searchBusStation(@Query("key") String apiKey,
-                                                     @Query("location") String latLng,
+    Observable<PlaceSearchResponse> searchBusStation(@Query("location") String latLng,
                                                      @Query("radius") long radius);
 }

@@ -1,7 +1,6 @@
-package com.kmitl.itl.enableandroid;
+package com.kmitl.itl.enableandroid.http;
 
-import com.google.android.gms.common.api.Api;
-
+import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
@@ -24,7 +23,12 @@ public class HttpManager {
 
     private HttpManager() {
         //TODO: add base url
+        OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new GoogleServiceInterceptor())
+                .build();
+
         Retrofit retrofit = new Retrofit.Builder()
+                .client(client)
                 .baseUrl("https://www.google.com/")
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(SimpleXmlConverterFactory.create())

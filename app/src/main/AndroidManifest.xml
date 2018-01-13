@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MapActivity"
+            android:name=".ui.activity.MapActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,9 +22,34 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".ui.activity.BusStationDetailActivity" />
+
+        <service
+            android:name=".service.BusNotificationService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".service.MyFirebaseInstanceIDService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <!--value is debug key-->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBe_chiEhKEEf3sr7cZtOQuNw12JJ3tLxA" />
+
+        <!--<meta-data-->
+            <!--android:name="com.google.firebase.messaging.default_notification_icon"-->
+            <!--android:resource="@drawable/ic_stat_ic_notification" />-->
+
+        <!--<meta-data-->
+            <!--android:name="com.google.firebase.messaging.default_notification_color"-->
+            <!--android:resource="@color/colorAccent" />-->
     </application>
 
 </manifest>

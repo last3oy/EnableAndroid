@@ -2,6 +2,7 @@ package com.kmitl.itl.enableandroid.model;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import org.parceler.Parcel;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -9,6 +10,7 @@ import org.simpleframework.xml.Root;
 import java.util.List;
 
 @Root(name = "PlaceSearchResponse", strict = false)
+@Parcel
 public class PlaceSearchResponse {
 
     @ElementList(name = "result", required = false, entry = "result", inline = true)
@@ -33,6 +35,7 @@ public class PlaceSearchResponse {
         this.status = value;
     }
 
+    @Parcel
     public static class PlaceResult {
 
         @Element(name = "rating", required = false)
@@ -180,6 +183,7 @@ public class PlaceSearchResponse {
 
     }
 
+    @Parcel
     public static class Southwest {
 
         @Element(name = "lng", required = false)
@@ -206,6 +210,7 @@ public class PlaceSearchResponse {
 
     }
 
+    @Parcel
     public static class Viewport {
 
         @Element(name = "southwest", required = false)
@@ -232,6 +237,7 @@ public class PlaceSearchResponse {
 
     }
 
+    @Parcel
     public static class OpeningHours {
 
         @Element(name = "open_now", required = false)
@@ -247,6 +253,7 @@ public class PlaceSearchResponse {
 
     }
 
+    @Parcel
     public static class Northeast {
 
         @Element(name = "lng", required = false)
@@ -273,6 +280,7 @@ public class PlaceSearchResponse {
 
     }
 
+    @Parcel
     public static class Photo {
 
         @Element(name = "photo_reference", required = false)
@@ -321,6 +329,7 @@ public class PlaceSearchResponse {
 
     }
 
+    @Parcel
     public static class Geometry {
 
         @Element(name = "viewport", required = false)
@@ -352,6 +361,7 @@ public class PlaceSearchResponse {
 
     }
 
+    @Parcel
     public static class Location {
 
         @Element(name = "lng", required = false)

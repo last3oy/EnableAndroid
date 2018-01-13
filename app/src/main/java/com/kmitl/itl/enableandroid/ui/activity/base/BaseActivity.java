@@ -1,4 +1,4 @@
-package com.kmitl.itl.enableandroid;
+package com.kmitl.itl.enableandroid.ui.activity.base;
 
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;

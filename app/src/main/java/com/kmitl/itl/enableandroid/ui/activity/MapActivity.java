@@ -43,7 +43,10 @@ import io.reactivex.schedulers.Schedulers;
 public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnMapReadyCallback {
 
     private static final String TAG = MapActivity.class.getClass().getSimpleName();
+    private static final int MAP_DEFAULT_ZOOM = 15;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 99;
+    public static final double MAP_DEFAULT_LATITUDE = 13.7369667;
+    public static final double MAP_DEFAULT_LONGTUDE = 100.5374572;
     private static int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
 
     private boolean mLocationPermissionGranted;
@@ -51,6 +54,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
     private DatabaseReference mDataBase;
     private FusedLocationProviderClient mLocationClient;
     private Disposable mDispoable;
+
 
     @Override
     protected int getLayoutId() {
@@ -175,6 +179,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
         try {
             if (mLocationPermissionGranted) {
                 mMap.setMyLocationEnabled(true);
+                mMap.getUiSettings().setMyLocationButtonEnabled(false);
                 mBinding.fabMyLocation.setVisibility(View.VISIBLE);
             } else {
                 mMap.setMyLocationEnabled(false);
@@ -210,8 +215,12 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
                 .addOnCompleteListener(task -> {
                     if (task.isComplete() && task.isSuccessful()) {
                         Location lastLocation = task.getResult();
-                        LatLng latLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+                        if (lastLocation != null) {
+                            LatLng latLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, MAP_DEFAULT_ZOOM));
+                        } else {
+                            showToast("ไม่สามารถหาตำแหน่งของคุณได้");
+                        }
                     } else if (isInitMap) {
                         moveCameraToDefault();
                     }
@@ -219,7 +228,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
     }
 
     private void moveCameraToDefault() {
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(13.7369667, 100.5374572), 15));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(MAP_DEFAULT_LATITUDE, MAP_DEFAULT_LONGTUDE), MAP_DEFAULT_ZOOM));
     }
 
     private void showToast(String message) {

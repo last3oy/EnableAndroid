@@ -23,6 +23,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -135,6 +136,9 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
                 Place place = PlaceAutocomplete.getPlace(this, data);
                 mBinding.tvPlaceName.setText(place.getName());
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
+                mMap.addMarker(new MarkerOptions()
+                        .position(place.getLatLng())
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
                 mDataBase.push().setValue(place.getName());
                 performSearchBusStation(place);
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {

@@ -6,13 +6,27 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.kmitl.itl.enableandroid.R;
+import com.kmitl.itl.enableandroid.model.Bus;
 import com.kmitl.itl.enableandroid.ui.viewholder.BusViewHolder;
 import com.kmitl.itl.enableandroid.ui.viewholder.HeaderViewHolder;
 
+import java.util.List;
+
 public class BusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+    public interface ItemClickListener {
+        void onItemClick(Bus bus);
+    }
 
     private static final int HEADER_TYPE = 0;
     private static final int ITEM_TYPE = 1;
+    private List<Bus> mBus;
+    private ItemClickListener mListener;
+
+    public BusAdapter(List<Bus> bus, ItemClickListener listener) {
+        mBus = bus;
+        mListener = listener;
+    }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -33,13 +47,18 @@ public class BusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (getItemViewType(position) == ITEM_TYPE) {
-
+            BusViewHolder busViewHolder = (BusViewHolder) holder;
+            Bus bus = mBus.get(position - 1);
+            busViewHolder.bind(bus, mListener);
         }
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        if (mBus == null) {
+            return 0;
+        }
+        return mBus.size() + 1;
     }
 
     @Override

@@ -23,7 +23,7 @@ public class BusNotificationService extends FirebaseMessagingService {
         if (isArriveValue != null) {
             Boolean isArrive = Boolean.valueOf(isArriveValue);
             if (isArrive) {
-                MyApp.getInstance().unsubscribeBus();
+                MyApp.unsubscribeBus();
             }
         }
 

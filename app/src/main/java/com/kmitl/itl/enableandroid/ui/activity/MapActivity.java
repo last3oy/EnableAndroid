@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -15,6 +16,9 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
@@ -55,6 +59,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
     private DatabaseReference mDataBase;
     private FusedLocationProviderClient mLocationClient;
     private Disposable mDispoable;
+    private Location mLastKnowLocation;
 
 
     @Override
@@ -107,8 +112,8 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
         updateMap();
     }
 
-    private void performSearchBusStation(Place place) {
-        String location = place.getLatLng().latitude + "," + place.getLatLng().longitude;
+    private void performSearchBusStation(Location place) {
+        String location = place.getLatitude() + "," + place.getLongitude();
         long radius = 5000;
 
         mDispoable = HttpManager.getInstance().getService()
@@ -127,6 +132,26 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
                 }, throwable -> Log.e(TAG, throwable.getMessage()));
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (!mLocationPermissionGranted) {
+            checkLocationPermission();
+        } else {
+            mLocationClient.requestLocationUpdates(LocationRequest.create(), mLocationCallback, Looper.myLooper());
+        }
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mDispoable != null && !mDispoable.isDisposed()) {
+            mDispoable.dispose();
+        }
+
+        mLocationClient.removeLocationUpdates(mLocationCallback);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -134,13 +159,20 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
         if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 Place place = PlaceAutocomplete.getPlace(this, data);
-                mBinding.tvPlaceName.setText(place.getName());
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
-                mMap.addMarker(new MarkerOptions()
-                        .position(place.getLatLng())
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+                mBinding.tvPlaceName.setText("ปลายทาง : " + place.getName());
                 mDataBase.push().setValue(place.getName());
-                performSearchBusStation(place);
+//                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
+//                mMap.addMarker(new MarkerOptions()
+//                        .position(place.getLatLng())
+//                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+//                performSearchBusStation(place);
+                if (mLastKnowLocation != null) {
+                    performSearchBusStation(mLastKnowLocation);
+                    LatLng latLng = new LatLng(mLastKnowLocation.getLatitude(), mLastKnowLocation.getLongitude());
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+                } else {
+                    showToast("ไม่สามารถหาตำแหน่งของคุณได้ กรุณาตรวจสอบการตั้งค่าตำแหน่งของคุณอีกครั้ง");
+                }
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                 Status status = PlaceAutocomplete.getStatus(this, data);
                 Log.e(TAG, status.getStatusMessage());
@@ -220,10 +252,14 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
                     if (task.isComplete() && task.isSuccessful()) {
                         Location lastLocation = task.getResult();
                         if (lastLocation != null) {
+                            mLastKnowLocation = lastLocation;
                             LatLng latLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, MAP_DEFAULT_ZOOM));
                         } else {
-                            showToast("ไม่สามารถหาตำแหน่งของคุณได้");
+                            showToast("ไม่สามารถหาตำแหน่งของคุณได้ กรุณาตรวจสอบการตั้งค่าตำแหน่งของคุณอีกครั้ง");
+                            if (isInitMap) {
+                                moveCameraToDefault();
+                            }
                         }
                     } else if (isInitMap) {
                         moveCameraToDefault();
@@ -236,14 +272,17 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
     }
 
     private void showToast(String message) {
-        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mDispoable != null && !mDispoable.isDisposed()) {
-            mDispoable.dispose();
+    private LocationCallback mLocationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            super.onLocationResult(locationResult);
+            Location lastLocation = locationResult.getLastLocation();
+            if (lastLocation != null) {
+                mLastKnowLocation = lastLocation;
+            }
         }
-    }
+    };
 }

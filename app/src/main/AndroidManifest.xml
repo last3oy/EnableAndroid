@@ -40,7 +40,7 @@
         <!--value is debug key-->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBe_chiEhKEEf3sr7cZtOQuNw12JJ3tLxA" />
+            android:value="AIzaSyAOEquMwt7bABGTWxam8SKtNgITfYaTI_0" />
 
         <!--<meta-data-->
             <!--android:name="com.google.firebase.messaging.default_notification_icon"-->

@@ -114,7 +114,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
 
     private void performSearchBusStation(Location place) {
         String location = place.getLatitude() + "," + place.getLongitude();
-        long radius = 5000;
+        long radius = 1000;
 
         mDispoable = HttpManager.getInstance().getService()
                 .searchBusStation(location, radius)

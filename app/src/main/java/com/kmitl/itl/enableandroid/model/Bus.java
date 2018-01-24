@@ -1,15 +1,23 @@
 package com.kmitl.itl.enableandroid.model;
 
+import org.parceler.Parcel;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
+//TODO rename this root
+@Root(name = "PlaceSearchResponse", strict = false)
+@Parcel
 public class Bus {
 
+    @Element(name = "ID", required = false)
     String id;
-
+    @Element(name = "Busno", required = false)
     String bunNumber;
-
+    @Element(name = "seat", required = false)
     int seat;
-
+    @Element(name = "count", required = false)
     int count;
-
+    @Element(name = "DateTime", required = false)//yyyy-MM-ddTHH:mm:ss
     String dateTime;
 
     public Bus() {

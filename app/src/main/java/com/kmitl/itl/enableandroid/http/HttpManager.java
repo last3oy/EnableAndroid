@@ -1,8 +1,11 @@
 package com.kmitl.itl.enableandroid.http;
 
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 public class HttpManager {
@@ -22,16 +25,20 @@ public class HttpManager {
     }
 
     private HttpManager() {
-        //TODO: add base url
         OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
                 .addInterceptor(new GoogleServiceInterceptor())
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
                 .client(client)
-                .baseUrl("https://www.google.com/")
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(SimpleXmlConverterFactory.create())
+                .baseUrl("http://servicetest0362.somee.com/")
+                .addConverterFactory(
+                        new AnnotatedConverterFactory.Builder()
+                                .add(Gson.class, GsonConverterFactory.create())
+                                .add(SimpleXml.class, SimpleXmlConverterFactory.create())
+                                .build())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
                 .build();
 
         mService = retrofit.create(ApiService.class);

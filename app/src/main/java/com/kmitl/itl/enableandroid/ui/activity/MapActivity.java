@@ -118,7 +118,6 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
 
         mDispoable = HttpManager.getInstance().getService()
                 .searchBusStation(location, radius)
-                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(placeSearchResponse -> {
                     for (PlaceResult ps :

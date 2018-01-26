@@ -160,11 +160,6 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
                 Place place = PlaceAutocomplete.getPlace(this, data);
                 mBinding.tvPlaceName.setText("ปลายทาง : " + place.getName());
                 mDataBase.push().setValue(place.getName());
-//                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
-//                mMap.addMarker(new MarkerOptions()
-//                        .position(place.getLatLng())
-//                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-//                performSearchBusStation(place);
                 if (mLastKnowLocation != null) {
                     performSearchBusStation(mLastKnowLocation);
                     LatLng latLng = new LatLng(mLastKnowLocation.getLatitude(), mLastKnowLocation.getLongitude());

@@ -56,7 +56,7 @@ public class BusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public int getItemCount() {
         if (mBus == null) {
-            return 0;
+            return 1;
         }
         return mBus.size() + 1;
     }
@@ -64,5 +64,10 @@ public class BusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public int getItemViewType(int position) {
         return position == 0 ? HEADER_TYPE : ITEM_TYPE;
+    }
+
+    public void setBus(List<Bus> mBus) {
+        this.mBus = mBus;
+        notifyDataSetChanged();
     }
 }

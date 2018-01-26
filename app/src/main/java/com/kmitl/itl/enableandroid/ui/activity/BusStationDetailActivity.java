@@ -16,6 +16,7 @@ import com.kmitl.itl.enableandroid.ui.adapter.BusAdapter;
 
 import org.parceler.Parcels;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,13 +25,8 @@ import io.reactivex.functions.Consumer;
 
 public class BusStationDetailActivity extends BaseActivity<ActivityBusStationDetailBinding> {
 
-    List<Bus> mBus = Arrays.asList(
-//            new Bus("0", "A1", 2, 30, "time"),
-//            new Bus("1", "A2", 7, 30, "time"),
-//            new Bus("2", "A3", 5, 30, "time"),
-//            new Bus("3", "A4", 4, 30, "time"),
-//            new Bus("4", "A5", 1, 30, "time")
-    );
+    private List<Bus> mBus = new ArrayList<>();
+    private BusAdapter mAdapter;
 
     @Override
     protected int getLayoutId() {
@@ -39,25 +35,28 @@ public class BusStationDetailActivity extends BaseActivity<ActivityBusStationDet
 
     @Override
     protected void initInstances() {
-        HttpManager.getInstance().getService().getBus("B01001")
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<Bus>() {
-                    @Override
-                    public void accept(Bus bus) throws Exception {
-                        Log.i("eiei",""+bus.getBusno());
-                    }
-                });
         PlaceResult placeResult = Parcels.unwrap(getIntent().getParcelableExtra("bus_station"));
-        mBinding.tvBusStation.setText(placeResult.getName());
-        BusAdapter adapter = new BusAdapter(mBus, new BusAdapter.ItemClickListener() {
+        mAdapter = new BusAdapter(mBus, new BusAdapter.ItemClickListener() {
             @Override
             public void onItemClick(Bus bus) {
                 MyApp.subscibeBus(bus.getBusno());
             }
         });
+        mBinding.rvBus.setAdapter(mAdapter);
+        mBinding.tvBusStation.setText(placeResult.getName());
         mBinding.rvBus.setLayoutManager(new LinearLayoutManager(this));
         mBinding.rvBus.setItemAnimator(new DefaultItemAnimator());
-        mBinding.rvBus.setAdapter(adapter);
+
+        HttpManager.getInstance().getService().getBus("B01001")
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Bus>() {
+                    @Override
+                    public void accept(Bus bus) throws Exception {
+                        mBus.clear();
+                        mBus.add(bus);
+                        mAdapter.setBus(mBus);
+                    }
+                });
     }
 
 }

@@ -21,12 +21,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 
 public class BusStationDetailActivity extends BaseActivity<ActivityBusStationDetailBinding> {
 
     private List<Bus> mBus = new ArrayList<>();
     private BusAdapter mAdapter;
+    private Disposable mDisposable;
 
     @Override
     protected int getLayoutId() {
@@ -47,7 +49,7 @@ public class BusStationDetailActivity extends BaseActivity<ActivityBusStationDet
         mBinding.rvBus.setLayoutManager(new LinearLayoutManager(this));
         mBinding.rvBus.setItemAnimator(new DefaultItemAnimator());
 
-        HttpManager.getInstance().getService().getBus("B01001")
+        mDisposable = HttpManager.getInstance().getService().getBus("B01001")
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<Bus>() {
                     @Override
@@ -59,4 +61,11 @@ public class BusStationDetailActivity extends BaseActivity<ActivityBusStationDet
                 });
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mDisposable != null) {
+            mDisposable.dispose();
+        }
+    }
 }

@@ -1,6 +1,9 @@
 package com.kmitl.itl.enableandroid;
 
 import android.app.Application;
+import android.content.SharedPreferences;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -9,10 +12,14 @@ import com.google.firebase.messaging.FirebaseMessaging;
 public class MyApp extends Application {
 
     private static String mBusTopic;
+    private static SharedPreferences mPref;
+
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        PrefsManager.getInstance().init(this);
     }
 
     public static void unsubscribeBus() {

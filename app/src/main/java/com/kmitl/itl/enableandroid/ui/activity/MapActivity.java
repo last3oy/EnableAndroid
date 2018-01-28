@@ -2,9 +2,9 @@ package com.kmitl.itl.enableandroid.ui.activity;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -14,12 +14,14 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
@@ -29,38 +31,48 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.kmitl.itl.enableandroid.http.HttpManager;
+import com.kmitl.itl.enableandroid.PrefsManager;
 import com.kmitl.itl.enableandroid.R;
-import com.kmitl.itl.enableandroid.ui.activity.base.BaseActivity;
 import com.kmitl.itl.enableandroid.databinding.ActivityMapBinding;
+import com.kmitl.itl.enableandroid.http.HttpManager;
 import com.kmitl.itl.enableandroid.model.PlaceSearchResponse.PlaceResult;
+import com.kmitl.itl.enableandroid.ui.activity.base.BaseActivity;
 
 import org.parceler.Parcels;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnMapReadyCallback {
 
-    private static final String TAG = MapActivity.class.getClass().getSimpleName();
+    private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
+    private static final int LOCATION_SETTING_REQUEST_CODE = 200;
+    private static final int PERMISSIONS_ACCESS_FINE_LOCATION_REQUEST_CODE = 99;
     private static final int MAP_DEFAULT_ZOOM = 15;
-    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 99;
-    public static final double MAP_DEFAULT_LATITUDE = 13.7369667;
-    public static final double MAP_DEFAULT_LONGTUDE = 100.5374572;
-    private static int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
+
+    private static final double MAP_DEFAULT_LATITUDE = 13.7369667;
+    private static final double MAP_DEFAULT_LONGITUDE = 100.5374572;
+
+    private static final LatLng DEFAULT_LAT_LNG = new LatLng(MAP_DEFAULT_LATITUDE, MAP_DEFAULT_LONGITUDE);
+
+    private static final String TAG = MapActivity.class.getClass().getSimpleName();
 
     private boolean mLocationPermissionGranted;
+    private boolean mHasLocationSetting;
+
     private GoogleMap mMap;
     private DatabaseReference mDataBase;
     private FusedLocationProviderClient mLocationClient;
     private Disposable mDispoable;
     private Location mLastKnowLocation;
-
 
     @Override
     protected int getLayoutId() {
@@ -70,12 +82,13 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
     @SuppressLint("MissingPermission")
     @Override
     protected void initInstances() {
+        mLocationPermissionGranted = PrefsManager.getInstance().getLocationPermission();
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.fragmentMap);
         mapFragment.getMapAsync(this);
         mLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         mBinding.cvSearch.setOnClickListener(v -> performPlaceSearch());
-        mBinding.fabMyLocation.setOnClickListener(v -> getLastLocation(false));
+        mBinding.fabMyLocation.setOnClickListener(v -> getLastLocation());
 
         mDataBase = FirebaseDatabase.getInstance().getReference().child("User Destinations");
     }
@@ -103,7 +116,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         mLocationPermissionGranted = false;
         switch (requestCode) {
-            case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+            case PERMISSIONS_ACCESS_FINE_LOCATION_REQUEST_CODE: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     mLocationPermissionGranted = true;
                 }
@@ -136,8 +149,6 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
         super.onStart();
         if (!mLocationPermissionGranted) {
             checkLocationPermission();
-        } else {
-            mLocationClient.requestLocationUpdates(LocationRequest.create(), mLocationCallback, Looper.myLooper());
         }
     }
 
@@ -148,8 +159,6 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
         if (mDispoable != null && !mDispoable.isDisposed()) {
             mDispoable.dispose();
         }
-
-        mLocationClient.removeLocationUpdates(mLocationCallback);
     }
 
     @Override
@@ -157,16 +166,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                Place place = PlaceAutocomplete.getPlace(this, data);
-                mBinding.tvPlaceName.setText("ปลายทาง : " + place.getName());
-                mDataBase.push().setValue(place.getName());
-                if (mLastKnowLocation != null) {
-                    performSearchBusStation(mLastKnowLocation);
-                    LatLng latLng = new LatLng(mLastKnowLocation.getLatitude(), mLastKnowLocation.getLongitude());
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-                } else {
-                    showToast("ไม่สามารถหาตำแหน่งของคุณได้ กรุณาตรวจสอบการตั้งค่าตำแหน่งของคุณอีกครั้ง");
-                }
+                handleSearchResult(data);
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                 Status status = PlaceAutocomplete.getStatus(this, data);
                 Log.e(TAG, status.getStatusMessage());
@@ -174,15 +174,61 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
                 mBinding.tvPlaceName.setText("");
                 mMap.clear();
             }
+        } else if (requestCode == LOCATION_SETTING_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                mHasLocationSetting = true;
+            } else {
+                mHasLocationSetting = false;
+            }
         }
+    }
+
+    private void handleSearchResult(Intent data) {
+        if (mLastKnowLocation == null) {
+            showToast("ไม่สามารถแสดงข้อมูลได้เนื่องจากไม่มีตำแหน่งของคุณ กรุณาเปิดตำแหน่ง"); // Mock message
+            requestLocationSetting();
+            return;
+        }
+
+        performSearchBusStation(mLastKnowLocation);
+        Place place = PlaceAutocomplete.getPlace(this, data);
+        mBinding.tvPlaceName.setText("ปลายทาง : " + place.getName());
+        mDataBase.push().setValue(place.getName());
+        LatLngBounds.Builder builder = LatLngBounds.builder();
+        LatLng lastKnowLatLng = new LatLng(mLastKnowLocation.getLatitude(), mLastKnowLocation.getLongitude());
+        builder.include(place.getLatLng());
+        builder.include(lastKnowLatLng);
+        mMap.addMarker(new MarkerOptions()
+                .position(place.getLatLng())
+                .title(place.getName().toString())
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 250));
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         initMap();
+        checkLocationPermission();
         updateMap();
-        getLastLocation(true);
+        requestLocationSetting();
+        getLastLocation();
+    }
+
+    private void requestLocationSetting() {
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+
+        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
+
+        Task<LocationSettingsResponse> task = settingsClient.checkLocationSettings(builder.build());
+        task.addOnSuccessListener(this, mLocationSettingSuccess);
+        task.addOnFailureListener(this, mLocationSettingFailure);
     }
 
     private void initMap() {
@@ -192,13 +238,18 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
 
         mMap.setMinZoomPreference(7);
         mMap.setMaxZoomPreference(20);
-        mMap.setOnInfoWindowClickListener(marker -> {
-            PlaceResult placeResult = (PlaceResult) marker.getTag();
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LAT_LNG, MAP_DEFAULT_ZOOM));
+        mMap.setOnInfoWindowClickListener(this::goToBusStationDetail);
+
+    }
+
+    private void goToBusStationDetail(Marker marker) {
+        PlaceResult placeResult = (PlaceResult) marker.getTag();
+        if (placeResult != null) {
             Intent intent = new Intent(this, BusStationDetailActivity.class);
             intent.putExtra("bus_station", Parcels.wrap(placeResult));
             startActivity(intent);
-
-        });
+        }
     }
 
     private void updateMap() {
@@ -226,18 +277,24 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             mLocationPermissionGranted = true;
+            PrefsManager.getInstance().saveLocationPermission();
             updateMap();
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+                    PERMISSIONS_ACCESS_FINE_LOCATION_REQUEST_CODE);
         }
     }
 
     @SuppressLint("MissingPermission")
-    private void getLastLocation(boolean isInitMap) {
+    private void getLastLocation() {
         if (!mLocationPermissionGranted) {
-            moveCameraToDefault();
+            checkLocationPermission();
+            return;
+        }
+
+        if (!mHasLocationSetting) {
+            requestLocationSetting();
             return;
         }
 
@@ -249,33 +306,36 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
                             mLastKnowLocation = lastLocation;
                             LatLng latLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, MAP_DEFAULT_ZOOM));
-                        } else {
-                            showToast("ไม่สามารถหาตำแหน่งของคุณได้ กรุณาตรวจสอบการตั้งค่าตำแหน่งของคุณอีกครั้ง");
-                            if (isInitMap) {
-                                moveCameraToDefault();
-                            }
+                            return;
                         }
-                    } else if (isInitMap) {
-                        moveCameraToDefault();
                     }
+                    showToast("ไม่สามารถหาตำแหน่งของคุณได้ กรุณาตรวจสอบการตั้งค่าตำแหน่งของคุณอีกครั้ง");
                 });
-    }
-
-    private void moveCameraToDefault() {
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(MAP_DEFAULT_LATITUDE, MAP_DEFAULT_LONGTUDE), MAP_DEFAULT_ZOOM));
     }
 
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
     }
 
-    private LocationCallback mLocationCallback = new LocationCallback() {
+    private OnSuccessListener<LocationSettingsResponse> mLocationSettingSuccess = new OnSuccessListener<LocationSettingsResponse>() {
         @Override
-        public void onLocationResult(LocationResult locationResult) {
-            super.onLocationResult(locationResult);
-            Location lastLocation = locationResult.getLastLocation();
-            if (lastLocation != null) {
-                mLastKnowLocation = lastLocation;
+        public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+            mHasLocationSetting = true;
+            getLastLocation();
+        }
+    };
+
+    private OnFailureListener mLocationSettingFailure = new OnFailureListener() {
+        @Override
+        public void onFailure(@NonNull Exception e) {
+            if (e instanceof ResolvableApiException) {
+                try {
+                    ResolvableApiException resolvable = (ResolvableApiException) e;
+                    resolvable.startResolutionForResult(MapActivity.this,
+                            LOCATION_SETTING_REQUEST_CODE);
+                } catch (IntentSender.SendIntentException sendEx) {
+                    Log.e(TAG, sendEx.getMessage());
+                }
             }
         }
     };

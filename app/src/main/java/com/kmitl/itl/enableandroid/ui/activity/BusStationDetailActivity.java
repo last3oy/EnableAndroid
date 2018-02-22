@@ -58,6 +58,11 @@ public class BusStationDetailActivity extends BaseActivity<ActivityBusStationDet
                         mBus.add(bus);
                         mAdapter.setBus(mBus);
                     }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        Toast.makeText(BusStationDetailActivity.this, "Cann't connect the Server", Toast.LENGTH_SHORT).show();
+                    }
                 });
     }
 

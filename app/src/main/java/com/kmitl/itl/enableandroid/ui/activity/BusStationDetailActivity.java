@@ -55,11 +55,11 @@ public class BusStationDetailActivity extends BaseActivity<ActivityBusStationDet
         double destinationLat = destinationLatLng.latitude;
         mDisposable = HttpManager.getInstance().getService().getBus(startLat, destinationLat)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<Bus>() {
+                .subscribe(new Consumer<List<Bus>>() {
                     @Override
-                    public void accept(Bus bus) throws Exception {
+                    public void accept(List<Bus> buses) throws Exception {
                         mBus.clear();
-                        mBus.add(bus);
+                        mBus = buses;
                         mAdapter.setBus(mBus);
                     }
                 }, new Consumer<Throwable>() {

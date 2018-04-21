@@ -3,6 +3,8 @@ package com.kmitl.itl.enableandroid.http;
 import com.kmitl.itl.enableandroid.model.Bus;
 import com.kmitl.itl.enableandroid.model.PlaceSearchResponse;
 
+import java.util.List;
+
 import io.reactivex.Observable;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
@@ -18,7 +20,7 @@ public interface ApiService {
 //    http://enable.somee.com/api/Bus?firststoplat=13.730329&laststoplat=13.722049
     @GET("Bus")
     @Gson
-    Observable<Bus> getBus(@Query("firststoplat") Double startLat,
-                           @Query("laststoplat") Double endLat);
+    Observable<List<Bus>> getBus(@Query("firststoplat") Double startLat,
+                                 @Query("laststoplat") Double endLat);
 
 }

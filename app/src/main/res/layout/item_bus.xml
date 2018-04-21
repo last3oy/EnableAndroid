@@ -13,6 +13,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="@drawable/item_background"
             android:ellipsize="end"
             android:gravity="center"
             android:padding="8dp"
@@ -23,6 +24,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="@drawable/item_background"
             android:ellipsize="end"
             android:gravity="center"
             android:padding="8dp"
@@ -33,26 +35,41 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="@drawable/item_background"
             android:ellipsize="end"
             android:gravity="center"
             android:padding="8dp"
             tools:text="11" />
 
-        <View
-            android:id="@+id/vDensityPopulation"
+        <FrameLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_margin="8dp"
             android:layout_weight="1"
-            tools:background="@color/colorAccent" />
+            android:background="@drawable/item_background"
+            android:padding="8dp">
 
-        <Button
-            android:id="@+id/btSub"
+            <View
+                android:id="@+id/vDensityPopulation"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:background="@color/colorAccent" />
+
+        </FrameLayout>
+
+        <FrameLayout
             android:layout_width="0dp"
-            android:text="ติดตาม"
             android:layout_height="match_parent"
-            android:layout_margin="8dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:background="@drawable/item_background"
+            android:padding="8dp">
+
+            <Button
+                android:id="@+id/btSub"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="ติดตาม" />
+
+        </FrameLayout>
 
     </LinearLayout>
 </layout>

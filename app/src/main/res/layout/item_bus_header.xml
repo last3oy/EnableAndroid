@@ -6,35 +6,40 @@
     android:orientation="horizontal">
 
     <TextView
-        android:text="Bus Number"
-        android:gravity="center"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:background="@drawable/item_background"
+        android:gravity="center"
+        android:text="Bus Number" />
 
     <TextView
-        android:text="Time to bus stop (min)"
-        android:gravity="center"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:background="@drawable/item_background"
+        android:gravity="center"
+        android:text="Time to bus stop (min)" />
 
     <TextView
-        android:text="Status seat (vacant)"
-        android:gravity="center"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:background="@drawable/item_background"
+        android:gravity="center"
+        android:text="Status seat (vacant)" />
 
     <TextView
-        android:text="Density of population"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@drawable/item_background"
         android:gravity="center"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1" />
+        android:text="Density of population" />
 
-    <Space
+    <View
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1"/>
+        android:layout_weight="1"
+        android:background="@drawable/item_background" />
 </LinearLayout>

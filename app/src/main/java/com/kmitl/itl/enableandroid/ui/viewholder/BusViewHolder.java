@@ -24,7 +24,7 @@ public class BusViewHolder extends RecyclerView.ViewHolder {
 
     public void bind(Bus bus, ItemClickListener listener) {
         float density = (float) bus.getSeat() / bus.getCount();
-        mBinding.tvBusNumber.setText(bus.getBusno());
+        mBinding.tvBusNumber.setText(bus.getNumber());
         mBinding.tvTimeBusArrive.setText(String.format("%d", new Random().nextInt(30) + 1));
         mBinding.tvVacantSeat.setText(String.format("%d", bus.getSeat()));
         if (density > 0 && density < 0.3) {

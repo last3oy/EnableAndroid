@@ -1,10 +1,12 @@
 package com.kmitl.itl.enableandroid.ui.activity;
 
+import android.os.Parcelable;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.kmitl.itl.enableandroid.MyApp;
 import com.kmitl.itl.enableandroid.R;
 import com.kmitl.itl.enableandroid.http.HttpManager;
@@ -38,18 +40,20 @@ public class BusStationDetailActivity extends BaseActivity<ActivityBusStationDet
     @Override
     protected void initInstances() {
         PlaceResult placeResult = Parcels.unwrap(getIntent().getParcelableExtra("bus_station"));
+        LatLng destinationLatLng = getIntent().getParcelableExtra("destination_lat_lng");
         mAdapter = new BusAdapter(mBus, new BusAdapter.ItemClickListener() {
             @Override
             public void onItemClick(Bus bus) {
-                MyApp.subscibeBus(bus.getBusno());
+                MyApp.subscibeBus(bus.getNumber());
             }
         });
         mBinding.rvBus.setAdapter(mAdapter);
         mBinding.tvBusStation.setText(placeResult.getName());
         mBinding.rvBus.setLayoutManager(new LinearLayoutManager(this));
         mBinding.rvBus.setItemAnimator(new DefaultItemAnimator());
-
-        mDisposable = HttpManager.getInstance().getService().getBus("B01001")
+        double startLat = placeResult.getGeometry().getLatLng().latitude;
+        double destinationLat = destinationLatLng.latitude;
+        mDisposable = HttpManager.getInstance().getService().getBus(startLat, destinationLat)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<Bus>() {
                     @Override

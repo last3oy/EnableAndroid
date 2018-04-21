@@ -32,7 +32,7 @@ public class HttpManager {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .client(client)
-                .baseUrl("http://servicetest0362.somee.com/")
+                .baseUrl("http://enable.somee.com/api/")
                 .addConverterFactory(
                         new AnnotatedConverterFactory.Builder()
                                 .add(Gson.class, GsonConverterFactory.create())

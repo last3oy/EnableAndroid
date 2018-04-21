@@ -15,8 +15,10 @@ public interface ApiService {
     Observable<PlaceSearchResponse> searchBusStation(@Query("location") String latLng,
                                                      @Query("radius") long radius);
 
-    @GET("api/Bus/{busId}")
+//    http://enable.somee.com/api/Bus?firststoplat=13.730329&laststoplat=13.722049
+    @GET("Bus")
     @Gson
-    Observable<Bus> getBus(@Path("busId") String busId);
+    Observable<Bus> getBus(@Query("firststoplat") Double startLat,
+                           @Query("laststoplat") Double endLat);
 
 }

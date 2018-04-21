@@ -13,20 +13,36 @@ import java.util.List;
 
 public class Bus {
 
+    @SerializedName("id")
+    private String id;
+
+    @SerializedName("number")
+    private String number;
+
     @SerializedName("seat")
-    Integer seat;
+    private Integer seat;
 
     @SerializedName("count")
-    Integer count;
-
-    @SerializedName("Busno")
-    String busno;
-
-    @SerializedName("ID")
-    String id;
+    private Integer count;
 
     @SerializedName("DateTime")
-    String dateTime;
+    private String dateTime;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getNumber() {
+        return number;
+    }
+
+    public void setNumber(String number) {
+        this.number = number;
+    }
 
     public Integer getSeat() {
         return seat;
@@ -42,22 +58,6 @@ public class Bus {
 
     public void setCount(Integer count) {
         this.count = count;
-    }
-
-    public String getBusno() {
-        return busno;
-    }
-
-    public void setBusno(String busno) {
-        this.busno = busno;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getDateTime() {

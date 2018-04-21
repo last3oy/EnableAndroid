@@ -73,6 +73,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
     private FusedLocationProviderClient mLocationClient;
     private Disposable mDispoable;
     private Location mLastKnowLocation;
+    private Place mDestinationPlace;
 
     @Override
     protected int getLayoutId() {
@@ -172,7 +173,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
                 Log.e(TAG, status.getStatusMessage());
             } else if (resultCode == RESULT_CANCELED) {
                 mBinding.tvPlaceName.setText("");
-                mMap.clear();
+                clearMarker();
             }
         } else if (requestCode == LOCATION_SETTING_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
@@ -184,6 +185,7 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
     }
 
     private void handleSearchResult(Intent data) {
+        clearMarker();
         if (mLastKnowLocation == null) {
             showToast("ไม่สามารถแสดงข้อมูลได้เนื่องจากไม่มีตำแหน่งของคุณ กรุณาเปิดตำแหน่ง"); // Mock message
             requestLocationSetting();
@@ -191,18 +193,22 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
         }
 
         performSearchBusStation(mLastKnowLocation);
-        Place place = PlaceAutocomplete.getPlace(this, data);
-        mBinding.tvPlaceName.setText("ปลายทาง : " + place.getName());
-        mDataBase.push().setValue(place.getName());
+        mDestinationPlace = PlaceAutocomplete.getPlace(this, data);
+        mBinding.tvPlaceName.setText("ปลายทาง : " + mDestinationPlace.getName());
+        mDataBase.push().setValue(mDestinationPlace.getName());
         LatLngBounds.Builder builder = LatLngBounds.builder();
         LatLng lastKnowLatLng = new LatLng(mLastKnowLocation.getLatitude(), mLastKnowLocation.getLongitude());
-        builder.include(place.getLatLng());
+        builder.include(mDestinationPlace.getLatLng());
         builder.include(lastKnowLatLng);
         mMap.addMarker(new MarkerOptions()
-                .position(place.getLatLng())
-                .title(place.getName().toString())
+                .position(mDestinationPlace.getLatLng())
+                .title(mDestinationPlace.getName().toString())
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 250));
+    }
+
+    private void clearMarker() {
+        mMap.clear();
     }
 
     @Override
@@ -245,8 +251,9 @@ public class MapActivity extends BaseActivity<ActivityMapBinding> implements OnM
 
     private void goToBusStationDetail(Marker marker) {
         PlaceResult placeResult = (PlaceResult) marker.getTag();
-        if (placeResult != null) {
+        if (mDestinationPlace != null && placeResult != null) {
             Intent intent = new Intent(this, BusStationDetailActivity.class);
+            intent.putExtra("destination_lat_lng", mDestinationPlace.getLatLng());
             intent.putExtra("bus_station", Parcels.wrap(placeResult));
             startActivity(intent);
         }
